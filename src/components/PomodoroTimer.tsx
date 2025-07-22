@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import alarmSound from '@/assets/alarm.mp3';
 
 interface PomodoroTimerProps {
   onPomodoroComplete?: (type: 'focus' | 'break') => void;
@@ -26,35 +27,81 @@ export const PomodoroTimer = ({ onPomodoroComplete, taskId }: PomodoroTimerProps
 
   // Initialize audio for notifications
   useEffect(() => {
-    audioRef.current = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp5KJ...');
+    audioRef.current = new Audio(alarmSound);
+    // Allow audio to be played on user interaction
+    const unlockAudio = () => {
+      if (audioRef.current) {
+        audioRef.current.play().catch(() => {});
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+      window.removeEventListener('click', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
+    };
+    window.addEventListener('click', unlockAudio);
+    window.addEventListener('keydown', unlockAudio);
+    return () => {
+      window.removeEventListener('click', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
+    };
   }, []);
+
+  // Helper to set duration in minutes (can be fractional)
+  const setDuration = (type: 'focus' | 'break', value: string) => {
+    const floatVal = parseFloat(value);
+    if (type === 'focus') {
+      setFocusDuration(floatVal);
+      if (sessionType === 'focus' && !isActive) {
+        setMinutes(Math.floor(floatVal));
+        setSeconds(Math.round((floatVal - Math.floor(floatVal)) * 60));
+      }
+    } else {
+      setBreakDuration(floatVal);
+      if (sessionType === 'break' && !isActive) {
+        setMinutes(Math.floor(floatVal));
+        setSeconds(Math.round((floatVal - Math.floor(floatVal)) * 60));
+      }
+    }
+  };
+
+  // Set initial timer values on mount and when session type changes
+  useEffect(() => {
+    if (sessionType === 'focus') {
+      setMinutes(Math.floor(focusDuration));
+      setSeconds(Math.round((focusDuration - Math.floor(focusDuration)) * 60));
+    } else {
+      setMinutes(Math.floor(breakDuration));
+      setSeconds(Math.round((breakDuration - Math.floor(breakDuration)) * 60));
+    }
+  }, [sessionType, focusDuration, breakDuration]);
 
   const totalSeconds = sessionType === 'focus' ? focusDuration * 60 : breakDuration * 60;
   const currentSeconds = minutes * 60 + seconds;
   const progress = ((totalSeconds - currentSeconds) / totalSeconds) * 100;
 
   useEffect(() => {
-    if (isActive && currentSeconds > 0) {
+    if (isActive && (minutes > 0 || seconds > 0)) {
       intervalRef.current = setInterval(() => {
-        if (seconds > 0) {
-          setSeconds(seconds - 1);
-        } else if (minutes > 0) {
-          setMinutes(minutes - 1);
-          setSeconds(59);
-        }
+        setSeconds(prevSeconds => {
+          if (prevSeconds > 0) {
+            return prevSeconds - 1;
+          } else if (minutes > 0) {
+            setMinutes(prevMinutes => prevMinutes - 1);
+            return 59;
+          } else {
+            return 0;
+          }
+        });
       }, 1000);
     } else {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
-      
-      // Timer completed
-      if (isActive && currentSeconds === 0) {
+      if (isActive && minutes === 0 && seconds === 0) {
         handleTimerComplete();
       }
     }
-
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -64,48 +111,55 @@ export const PomodoroTimer = ({ onPomodoroComplete, taskId }: PomodoroTimerProps
 
   const handleTimerComplete = () => {
     setIsActive(false);
-    
-    // Play notification sound
+    // Play notification sound if possible
     if (audioRef.current) {
-      audioRef.current.play().catch(() => {
-        // Fallback for browsers that block autoplay
-        console.log('Could not play notification sound');
-      });
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(() => {});
     }
-
     if (sessionType === 'focus') {
       setCompletedPomodoros(prev => prev + 1);
       onPomodoroComplete?.('focus');
-      
-      // Auto-start break after focus session
       setSessionType('break');
-      setMinutes(breakDuration);
-      setSeconds(0);
+      setMinutes(Math.floor(breakDuration));
+      setSeconds(Math.round((breakDuration - Math.floor(breakDuration)) * 60));
     } else {
       onPomodoroComplete?.('break');
-      
-      // Return to focus session
       setSessionType('focus');
-      setMinutes(focusDuration);
-      setSeconds(0);
+      setMinutes(Math.floor(focusDuration));
+      setSeconds(Math.round((focusDuration - Math.floor(focusDuration)) * 60));
     }
   };
 
   const toggleTimer = () => {
+    // Stop alarm sound if it's playing
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
     setIsActive(!isActive);
   };
 
   const resetTimer = () => {
     setIsActive(false);
-    setMinutes(sessionType === 'focus' ? focusDuration : breakDuration);
-    setSeconds(0);
+    if (sessionType === 'focus') {
+      setMinutes(Math.floor(focusDuration));
+      setSeconds(Math.round((focusDuration - Math.floor(focusDuration)) * 60));
+    } else {
+      setMinutes(Math.floor(breakDuration));
+      setSeconds(Math.round((breakDuration - Math.floor(breakDuration)) * 60));
+    }
   };
 
   const switchSession = (type: 'focus' | 'break') => {
     setIsActive(false);
     setSessionType(type);
-    setMinutes(type === 'focus' ? focusDuration : breakDuration);
-    setSeconds(0);
+    if (type === 'focus') {
+      setMinutes(Math.floor(focusDuration));
+      setSeconds(Math.round((focusDuration - Math.floor(focusDuration)) * 60));
+    } else {
+      setMinutes(Math.floor(breakDuration));
+      setSeconds(Math.round((breakDuration - Math.floor(breakDuration)) * 60));
+    }
   };
 
   const formatTime = (mins: number, secs: number) => {
@@ -207,20 +261,14 @@ export const PomodoroTimer = ({ onPomodoroComplete, taskId }: PomodoroTimerProps
             <label className="text-sm font-medium">Focus Duration</label>
             <Select 
               value={focusDuration.toString()} 
-              onValueChange={(value) => {
-                const newDuration = parseInt(value);
-                setFocusDuration(newDuration);
-                if (sessionType === 'focus' && !isActive) {
-                  setMinutes(newDuration);
-                  setSeconds(0);
-                }
-              }}
+              onValueChange={(value) => setDuration('focus', value)}
               disabled={isActive}
             >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="0.05">3 sec (test)</SelectItem>
                 <SelectItem value="15">15 min</SelectItem>
                 <SelectItem value="25">25 min</SelectItem>
                 <SelectItem value="30">30 min</SelectItem>
@@ -234,20 +282,14 @@ export const PomodoroTimer = ({ onPomodoroComplete, taskId }: PomodoroTimerProps
             <label className="text-sm font-medium">Break Duration</label>
             <Select 
               value={breakDuration.toString()} 
-              onValueChange={(value) => {
-                const newDuration = parseInt(value);
-                setBreakDuration(newDuration);
-                if (sessionType === 'break' && !isActive) {
-                  setMinutes(newDuration);
-                  setSeconds(0);
-                }
-              }}
+              onValueChange={(value) => setDuration('break', value)}
               disabled={isActive}
             >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="0.05">3 sec (test)</SelectItem>
                 <SelectItem value="5">5 min</SelectItem>
                 <SelectItem value="10">10 min</SelectItem>
                 <SelectItem value="15">15 min</SelectItem>
