@@ -224,7 +224,7 @@ export const TaskApp = () => {
               variant="outline"
               size="lg"
               onClick={() => setShowPomodoroModal(true)}
-              className="h-14 w-14 rounded-full shadow-lg bg-background border-2"
+              className="h-14 w-14 rounded-full shadow-lg bg-background border-4"
             >
               <Timer className="h-6 w-6" />
             </Button>
@@ -252,7 +252,7 @@ export const TaskApp = () => {
       {/* Footer */}
       <footer className="border-t bg-muted/30 py-6 mt-12">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>Built with ❤️ for productivity enthusiasts</p>
+          <p>Tarea © 2025 — All rights reserved.</p>
         </div>
       </footer>
     </div>
