@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, LayoutGrid, List, Timer, Settings } from 'lucide-react';
+import { Plus, LayoutGrid, List, Timer, Settings, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,7 @@ import { TaskCard } from './TaskCard';
 import { TaskForm } from './TaskForm';
 import { KanbanBoard } from './KanbanBoard';
 import { PomodoroModal } from './PomodoroModal';
+import { NotesSection } from './NotesSection';
 import { useTasks } from '@/hooks/useTasks';
 import { Task, Filter, Status } from '@/types/task';
 
@@ -24,7 +25,7 @@ export const TaskApp = () => {
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [defaultStatus, setDefaultStatus] = useState<Status>('todo');
-  const [view, setView] = useState<'list' | 'kanban'>('kanban');
+  const [view, setView] = useState<'list' | 'kanban' | 'notes'>('kanban');
   const [showPomodoroModal, setShowPomodoroModal] = useState(false);
 
   const filteredTasks = filterTasks(tasks, filter);
@@ -122,7 +123,7 @@ export const TaskApp = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
-        <Tabs value={view} onValueChange={(value) => setView(value as 'list' | 'kanban')} className="space-y-6">
+        <Tabs value={view} onValueChange={(value) => setView(value as 'list' | 'kanban' | 'notes')} className="space-y-6">
           <div className="flex items-center justify-between">
             <TabsList>
               <TabsTrigger value="kanban" className="gap-2">
@@ -132,6 +133,10 @@ export const TaskApp = () => {
               <TabsTrigger value="list" className="gap-2">
                 <List className="h-4 w-4" />
                 List View
+              </TabsTrigger>
+              <TabsTrigger value="notes" className="gap-2">
+                <FileText className="h-4 w-4" />
+                Notes
               </TabsTrigger>
             </TabsList>
 
@@ -205,6 +210,10 @@ export const TaskApp = () => {
               onTaskDelete={deleteTask}
               onAddTask={handleAddTask}
             />
+          </TabsContent>
+
+          <TabsContent value="notes" className="h-[calc(100vh-16rem)]">
+            <NotesSection />
           </TabsContent>
         </Tabs>
 
