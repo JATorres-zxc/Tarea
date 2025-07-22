@@ -61,6 +61,20 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				priority: {
+					low: 'hsl(var(--priority-low))',
+					medium: 'hsl(var(--priority-medium))',
+					high: 'hsl(var(--priority-high))'
+				},
+				status: {
+					todo: 'hsl(var(--status-todo))',
+					progress: 'hsl(var(--status-progress))',
+					done: 'hsl(var(--status-done))'
+				},
+				pomodoro: {
+					focus: 'hsl(var(--pomodoro-focus))',
+					break: 'hsl(var(--pomodoro-break))'
 				}
 			},
 			borderRadius: {

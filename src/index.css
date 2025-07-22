@@ -2,41 +2,55 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Task Management App Design System - Classy & Minimal */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Light mode - Off-white backgrounds with soft grayscale */
+    --background: 60 9% 97.5%; /* #f9f9f9 equivalent */
+    --foreground: 240 5% 15%; /* Dark gray for text */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%; /* Pure white for cards */
+    --card-foreground: 240 5% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 240 5% 15%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Muted blue accent color - soft and professional */
+    --primary: 215 25% 55%; /* Muted blue */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 220 13% 91%; /* Light gray */
+    --secondary-foreground: 240 5% 25%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 220 13% 91%;
+    --muted-foreground: 240 5% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 215 25% 55%; /* Same as primary for consistency */
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 65% 60%; /* Soft red */
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 220 13% 85%; /* Subtle borders */
+    --input: 220 13% 91%;
+    --ring: 215 25% 55%;
 
-    --radius: 0.5rem;
+    /* Priority colors */
+    --priority-low: 130 25% 55%; /* Soft green */
+    --priority-medium: 35 25% 55%; /* Soft orange */
+    --priority-high: 0 25% 55%; /* Soft red */
+
+    /* Status colors */
+    --status-todo: 240 5% 65%; /* Gray */
+    --status-progress: 215 25% 55%; /* Blue */
+    --status-done: 130 25% 55%; /* Green */
+
+    /* Pomodoro colors */
+    --pomodoro-focus: 215 25% 55%; /* Blue */
+    --pomodoro-break: 130 25% 55%; /* Green */
+
+    --radius: 0.75rem; /* More rounded for classy look */
 
     --sidebar-background: 0 0% 98%;
 
@@ -56,33 +70,49 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    /* Dark mode - Almost black with soft contrast */
+    --background: 0 0% 7%; /* #121212 equivalent */
+    --foreground: 0 0% 90%; /* Soft white for text */
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 9%; /* Slightly lighter than background */
+    --card-foreground: 0 0% 90%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 90%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    /* Muted blue accent - slightly brighter for dark mode */
+    --primary: 215 35% 65%; /* Slightly brighter blue */
+    --primary-foreground: 0 0% 10%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 240 5% 15%; /* Dark gray */
+    --secondary-foreground: 0 0% 85%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 240 5% 15%;
+    --muted-foreground: 240 5% 65%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 215 35% 65%; /* Same as primary */
+    --accent-foreground: 0 0% 10%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 65% 65%; /* Slightly brighter red */
+    --destructive-foreground: 0 0% 95%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 240 5% 20%; /* Subtle dark borders */
+    --input: 240 5% 15%;
+    --ring: 215 35% 65%;
+
+    /* Priority colors for dark mode */
+    --priority-low: 130 35% 65%; /* Brighter green */
+    --priority-medium: 35 35% 65%; /* Brighter orange */
+    --priority-high: 0 35% 65%; /* Brighter red */
+
+    /* Status colors for dark mode */
+    --status-todo: 240 5% 55%; /* Lighter gray */
+    --status-progress: 215 35% 65%; /* Brighter blue */
+    --status-done: 130 35% 65%; /* Brighter green */
+
+    /* Pomodoro colors for dark mode */
+    --pomodoro-focus: 215 35% 65%; /* Brighter blue */
+    --pomodoro-break: 130 35% 65%; /* Brighter green */
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
