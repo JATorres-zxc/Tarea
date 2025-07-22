@@ -86,7 +86,7 @@ export const TaskApp = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
               <div>
-                <h1 className="text-2xl font-bold">Task Haven</h1>
+                <h1 className="text-2xl font-bold">Tarea</h1>
                 <p className="text-sm text-muted-foreground">Stay focused and productive</p>
               </div>
               
