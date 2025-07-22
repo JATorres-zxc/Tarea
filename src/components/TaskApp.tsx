@@ -24,7 +24,7 @@ export const TaskApp = () => {
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [defaultStatus, setDefaultStatus] = useState<Status>('todo');
-  const [view, setView] = useState<'list' | 'kanban'>('list');
+  const [view, setView] = useState<'list' | 'kanban'>('kanban');
   const [showPomodoroModal, setShowPomodoroModal] = useState(false);
 
   const filteredTasks = filterTasks(tasks, filter);
@@ -125,13 +125,13 @@ export const TaskApp = () => {
         <Tabs value={view} onValueChange={(value) => setView(value as 'list' | 'kanban')} className="space-y-6">
           <div className="flex items-center justify-between">
             <TabsList>
-              <TabsTrigger value="list" className="gap-2">
-                <List className="h-4 w-4" />
-                List View
-              </TabsTrigger>
               <TabsTrigger value="kanban" className="gap-2">
                 <LayoutGrid className="h-4 w-4" />
                 Kanban Board
+              </TabsTrigger>
+              <TabsTrigger value="list" className="gap-2">
+                <List className="h-4 w-4" />
+                List View
               </TabsTrigger>
             </TabsList>
 
