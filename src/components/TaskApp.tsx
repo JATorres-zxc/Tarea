@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, LayoutGrid, List, Timer, Settings, FileText } from 'lucide-react';
+import { Plus, LayoutGrid, List, Timer, Settings, FileText, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -11,10 +11,12 @@ import { KanbanBoard } from './KanbanBoard';
 import { PomodoroModal } from './PomodoroModal';
 import { NotesSection } from './NotesSection';
 import { useTasks } from '@/hooks/useTasks';
+import { useAuth } from '@/hooks/useAuth';
 import { Task, Filter, Status } from '@/types/task';
 
 export const TaskApp = () => {
   const { tasks, loading, addTask, updateTask, deleteTask, addComment, filterTasks, getAllTags } = useTasks();
+  const { user, logout } = useAuth();
   const [filter, setFilter] = useState<Filter>({
     search: '',
     tags: [],
@@ -88,7 +90,7 @@ export const TaskApp = () => {
             <div className="flex items-center gap-6">
               <div>
                 <h1 className="text-2xl font-bold">Tarea</h1>
-                <p className="text-sm text-muted-foreground">Stay focused and productive</p>
+                <p className="text-sm text-muted-foreground">Welcome back, {user?.name}</p>
               </div>
               
               <div className="hidden md:flex items-center gap-2">
@@ -114,6 +116,14 @@ export const TaskApp = () => {
               <Button onClick={() => handleAddTask()} className="gap-2">
                 <Plus className="h-4 w-4" />
                 <span className="hidden sm:inline">Add Task</span>
+              </Button>
+              <Button
+                onClick={logout}
+                variant="outline"
+                size="sm"
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">Logout</span>
               </Button>
               <ThemeToggle />
             </div>
