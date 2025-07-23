@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { TaskApp } from "@/components/TaskApp";
-import { ThemeProvider } from "@/components/ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
 
@@ -27,11 +26,7 @@ const Index = () => {
     return null;
   }
 
-  return (
-    <ThemeProvider>
-      <TaskApp />
-    </ThemeProvider>
-  );
+  return <TaskApp />;
 };
 
 export default Index;
