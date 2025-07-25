@@ -24,6 +24,8 @@ export const useAuth = () => {
   return context;
 };
 
+const API_BASE_URL = 'http://localhost:8000/api/auth/';
+
 export const useAuthProvider = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,19 +42,21 @@ export const useAuthProvider = () => {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Mock authentication - replace with real auth later
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch(`${API_BASE_URL}login/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
       
-      const mockUser = {
-        id: '1',
-        email,
-        name: email.split('@')[0]
-      };
+      if (!response.ok) throw new Error('Login failed');
       
-      localStorage.setItem('tarea-auth-user', JSON.stringify(mockUser));
-      setUser(mockUser);
+      const data = await response.json();
+      localStorage.setItem('token', data.token);
+      setUser(data.user);
     } catch (error) {
-      throw new Error('Invalid credentials');
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -61,19 +65,30 @@ export const useAuthProvider = () => {
   const signup = async (email: string, password: string, name: string) => {
     setIsLoading(true);
     try {
-      // Mock registration - replace with real auth later
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch(`${API_BASE_URL}register/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          email, 
+          password, 
+          password2: password, 
+          name,
+          username: email // Add username field for Django
+        }),
+      });
       
-      const mockUser = {
-        id: '1',
-        email,
-        name
-      };
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Signup failed');
+      }
       
-      localStorage.setItem('tarea-auth-user', JSON.stringify(mockUser));
-      setUser(mockUser);
+      const data = await response.json();
+      localStorage.setItem('token', data.token);
+      setUser(data.user);
     } catch (error) {
-      throw new Error('Registration failed');
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -81,6 +96,7 @@ export const useAuthProvider = () => {
 
   const logout = () => {
     localStorage.removeItem('tarea-auth-user');
+    localStorage.removeItem('token');
     setUser(null);
   };
 
