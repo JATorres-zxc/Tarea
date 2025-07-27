@@ -1,131 +1,193 @@
-import { useState, useEffect } from 'react';
-import { Task, Filter, Priority, Status } from '@/types/task';
+import { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
+import { Task, Filter, Priority, Status, Comment } from '@/types/task';
+import { useAuth } from './useAuth';
 
-const STORAGE_KEY = 'task-app-tasks';
+// Define API response types that match your Django backend
+interface ApiTask {
+  id: number;
+  title: string;
+  description?: string;
+  status: Status;
+  priority: Priority;
+  due_date?: string;
+  tags: string[];
+  created_at: string;
+  updated_at: string;
+  comments?: ApiComment[];
+  pomodoro_count?: number;
+  recurring?: {
+    interval: string;
+    last_created: string;
+  };
+}
 
-// Sample data for demo
-const sampleTasks: Task[] = [
-  {
-    id: '1',
-    title: 'Design new landing page',
-    description: 'Create wireframes and mockups for the new product landing page',
-    priority: 'high',
-    tags: ['Design', 'Web'],
-    dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-    status: 'progress',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    comments: [
-      {
-        id: '1',
-        content: 'Started working on the wireframes',
-        timestamp: new Date()
-      }
-    ],
-    pomodoroCount: 3
-  },
-  {
-    id: '2',
-    title: 'Review code submissions',
-    description: 'Go through the recent pull requests and provide feedback',
-    priority: 'medium',
-    tags: ['Code Review', 'Development'],
-    dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
-    status: 'todo',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    comments: [],
-    recurring: {
-      interval: 'weekly',
-      lastCreated: new Date()
-    }
-  },
-  {
-    id: '3',
-    title: 'Update documentation',
-    description: 'Update the API documentation with recent changes',
-    priority: 'low',
-    tags: ['Documentation'],
-    status: 'done',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    comments: [],
-    pomodoroCount: 2
-  }
-];
+interface ApiComment {
+  id: number;
+  content: string;
+  created_at: string;
+  user?: {
+    id: number;
+    name: string;
+    email: string;
+  };
+}
 
 export const useTasks = () => {
+  const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Load tasks from localStorage on mount
-  useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsedTasks = JSON.parse(stored).map((task: any) => ({
-          ...task,
-          dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
-          createdAt: new Date(task.createdAt),
-          updatedAt: new Date(task.updatedAt),
-          comments: task.comments.map((comment: any) => ({
-            ...comment,
-            timestamp: new Date(comment.timestamp)
-          }))
-        }));
-        setTasks(parsedTasks);
-      } catch (error) {
-        console.error('Error loading tasks:', error);
-        setTasks(sampleTasks);
-      }
-    } else {
-      setTasks(sampleTasks);
-    }
-    setLoading(false);
-  }, []);
-
-  // Save tasks to localStorage whenever tasks change
-  useEffect(() => {
-    if (!loading) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-    }
-  }, [tasks, loading]);
-
-  const addTask = (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'comments'>) => {
-    const newTask: Task = {
-      ...taskData,
-      id: crypto.randomUUID(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      comments: []
+  // Helper function to transform API response to Task type
+  const transformTask = (task: ApiTask): Task => {
+    return {
+      id: task.id.toString(),
+      title: task.title,
+      description: task.description,
+      status: task.status,
+      priority: task.priority,
+      dueDate: task.due_date ? new Date(task.due_date) : undefined,
+      tags: task.tags || [],
+      createdAt: new Date(task.created_at),
+      updatedAt: new Date(task.updated_at),
+      comments: task.comments?.map(transformComment) || [],
+      pomodoroCount: task.pomodoro_count || 0,
+      recurring: task.recurring ? {
+        interval: task.recurring.interval,
+        lastCreated: new Date(task.recurring.last_created)
+      } : undefined
     };
-    setTasks(prev => [newTask, ...prev]);
   };
 
-  const updateTask = (id: string, updates: Partial<Task>) => {
-    setTasks(prev => prev.map(task => 
-      task.id === id 
-        ? { ...task, ...updates, updatedAt: new Date() }
-        : task
-    ));
-  };
-
-  const deleteTask = (id: string) => {
-    setTasks(prev => prev.filter(task => task.id !== id));
-  };
-
-  const addComment = (taskId: string, content: string) => {
-    const newComment = {
-      id: crypto.randomUUID(),
-      content,
-      timestamp: new Date()
+  // Helper function to transform API comment to Comment type
+  const transformComment = (comment: ApiComment): Comment => {
+    return {
+      id: comment.id.toString(),
+      content: comment.content,
+      timestamp: new Date(comment.created_at),
+      user: comment.user ? {
+        id: comment.user.id.toString(),
+        name: comment.user.name,
+        email: comment.user.email
+      } : undefined
     };
-    
-    updateTask(taskId, {
-      comments: [...(tasks.find(t => t.id === taskId)?.comments || []), newComment]
-    });
   };
 
+  // Fetch tasks from API
+  const fetchTasks = useCallback(async () => {
+    if (!user) return;
+  
+    try {
+      setLoading(true);
+      const response = await axios.get('/api/tasks/');
+      
+      // Handle case where response.data is not an array
+      const tasksData = Array.isArray(response.data) ? response.data : [];
+      
+      const transformedTasks = tasksData.map(transformTask);
+      setTasks(transformedTasks);
+    } catch (err) {
+      setError('Failed to fetch tasks');
+      console.error('Error fetching tasks:', err);
+      
+      // Set empty array if error occurs (optional)
+      setTasks([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  // Load tasks on mount and when user changes
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]);
+
+  // Add a new task
+  const addTask = async (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'comments'>) => {
+    try {
+      const payload = {
+        title: taskData.title,
+        description: taskData.description,
+        status: taskData.status,
+        priority: taskData.priority,
+        due_date: taskData.dueDate?.toISOString(),
+        tags: taskData.tags || []
+      };
+
+      const response = await axios.post<ApiTask>('/api/tasks/', payload);
+      const newTask = transformTask(response.data);
+      setTasks(prev => [newTask, ...prev]);
+      return newTask;
+    } catch (err) {
+      setError('Failed to add task');
+      console.error('Error adding task:', err);
+      throw err;
+    }
+  };
+
+  // Update an existing task
+  const updateTask = async (id: string, updates: Partial<Task>) => {
+    try {
+      const payload = {
+        title: updates.title,
+        description: updates.description,
+        status: updates.status,
+        priority: updates.priority,
+        due_date: updates.dueDate?.toISOString(),
+        tags: updates.tags
+      };
+
+      const response = await axios.patch<ApiTask>(`/api/tasks/${id}/`, payload);
+      const updatedTask = transformTask(response.data);
+      setTasks(prev => prev.map(task => 
+        task.id === id ? updatedTask : task
+      ));
+      return updatedTask;
+    } catch (err) {
+      setError('Failed to update task');
+      console.error('Error updating task:', err);
+      throw err;
+    }
+  };
+
+  // Delete a task
+  const deleteTask = async (id: string) => {
+    try {
+      await axios.delete(`/api/tasks/${id}/`);
+      setTasks(prev => prev.filter(task => task.id !== id));
+    } catch (err) {
+      setError('Failed to delete task');
+      console.error('Error deleting task:', err);
+      throw err;
+    }
+  };
+
+  // Add a comment to a task
+  const addComment = async (taskId: string, content: string) => {
+    try {
+      const response = await axios.post<ApiComment>(`/api/tasks/${taskId}/comments/`, { content });
+      const newComment = transformComment(response.data);
+      
+      setTasks(prev => prev.map(task => {
+        if (task.id === taskId) {
+          return {
+            ...task,
+            comments: [...task.comments, newComment]
+          };
+        }
+        return task;
+      }));
+
+      return newComment;
+    } catch (err) {
+      setError('Failed to add comment');
+      console.error('Error adding comment:', err);
+      throw err;
+    }
+  };
+
+  // Filter tasks based on filter criteria
   const filterTasks = (tasks: Task[], filter: Filter): Task[] => {
     return tasks.filter(task => {
       // Search filter
@@ -133,13 +195,13 @@ export const useTasks = () => {
         const searchLower = filter.search.toLowerCase();
         const matchesSearch = 
           task.title.toLowerCase().includes(searchLower) ||
-          task.description.toLowerCase().includes(searchLower) ||
+          (task.description && task.description.toLowerCase().includes(searchLower)) ||
           task.tags.some(tag => tag.toLowerCase().includes(searchLower));
         if (!matchesSearch) return false;
       }
 
       // Tags filter
-      if (filter.tags.length > 0) {
+      if (filter.tags && filter.tags.length > 0) {
         const hasMatchingTag = filter.tags.some(tag => 
           task.tags.some(taskTag => taskTag.toLowerCase().includes(tag.toLowerCase()))
         );
@@ -147,12 +209,12 @@ export const useTasks = () => {
       }
 
       // Status filter
-      if (filter.status.length > 0 && !filter.status.includes(task.status)) {
+      if (filter.status && filter.status.length > 0 && !filter.status.includes(task.status)) {
         return false;
       }
 
       // Priority filter
-      if (filter.priority.length > 0 && !filter.priority.includes(task.priority)) {
+      if (filter.priority && filter.priority.length > 0 && !filter.priority.includes(task.priority)) {
         return false;
       }
 
@@ -184,6 +246,7 @@ export const useTasks = () => {
     });
   };
 
+  // Get all unique tags from tasks
   const getAllTags = (): string[] => {
     const allTags = tasks.flatMap(task => task.tags);
     return Array.from(new Set(allTags)).sort();
@@ -192,11 +255,13 @@ export const useTasks = () => {
   return {
     tasks,
     loading,
+    error,
     addTask,
     updateTask,
     deleteTask,
     addComment,
     filterTasks,
-    getAllTags
+    getAllTags,
+    refreshTasks: fetchTasks
   };
 };
