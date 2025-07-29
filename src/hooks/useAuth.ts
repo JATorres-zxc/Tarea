@@ -31,9 +31,10 @@ export const useAuthProvider = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for stored auth state
     const storedUser = localStorage.getItem('tarea-auth-user');
-    if (storedUser) {
+    const token = localStorage.getItem('token');
+    
+    if (storedUser && token) {
       setUser(JSON.parse(storedUser));
     }
     setIsLoading(false);
@@ -53,7 +54,9 @@ export const useAuthProvider = () => {
       if (!response.ok) throw new Error('Login failed');
       
       const data = await response.json();
+      // Store token with a consistent key
       localStorage.setItem('token', data.token);
+      localStorage.setItem('tarea-auth-user', JSON.stringify(data.user));
       setUser(data.user);
     } catch (error) {
       throw error;
@@ -86,6 +89,7 @@ export const useAuthProvider = () => {
       
       const data = await response.json();
       localStorage.setItem('token', data.token);
+      localStorage.setItem('tarea-auth-user', JSON.stringify(data.user));
       setUser(data.user);
     } catch (error) {
       throw error;
