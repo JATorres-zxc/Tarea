@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
+import axios from '@/api/axios'; // instead of 'axios'
 
 interface User {
   id: string;
