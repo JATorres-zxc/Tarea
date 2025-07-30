@@ -10,6 +10,7 @@ import { TaskForm } from './TaskForm';
 import { KanbanBoard } from './KanbanBoard';
 import { PomodoroModal } from './PomodoroModal';
 import { NotesSection } from './NotesSection';
+import { DeleteTaskModal } from './DeleteTaskModal';
 import { useTasks } from '@/hooks/useTasks';
 import { useAuth } from '@/hooks/useAuth';
 import { Task, Filter, Status } from '@/types/task';
@@ -29,6 +30,8 @@ export const TaskApp = () => {
   const [defaultStatus, setDefaultStatus] = useState<Status>('todo');
   const [view, setView] = useState<'list' | 'kanban' | 'notes'>('kanban');
   const [showPomodoroModal, setShowPomodoroModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
 
   const filteredTasks = filterTasks(tasks, filter);
   const availableTags = getAllTags();
@@ -51,6 +54,18 @@ export const TaskApp = () => {
     setEditingTask(null);
     setDefaultStatus(status || 'todo');
     setShowTaskForm(true);
+  };
+
+  const handleDeleteTask = (task: Task) => {
+    setTaskToDelete(task);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteTask = () => {
+    if (taskToDelete) {
+      deleteTask(taskToDelete.id);
+      setTaskToDelete(null);
+    }
   };
 
   const handlePomodoroComplete = (type: 'focus' | 'break') => {
@@ -200,26 +215,26 @@ export const TaskApp = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredTasks.map(task => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    onEdit={handleEditTask}
-                    onDelete={deleteTask}
-                    onStatusChange={(id, status) => updateTask(id, { status })}
-                  />
+                   <TaskCard
+                     key={task.id}
+                     task={task}
+                     onEdit={handleEditTask}
+                     onDelete={() => handleDeleteTask(task)}
+                     onStatusChange={(id, status) => updateTask(id, { status })}
+                   />
                 ))}
               </div>
             )}
           </TabsContent>
 
           <TabsContent value="kanban">
-            <KanbanBoard
-              tasks={filteredTasks}
-              onTaskUpdate={updateTask}
-              onTaskEdit={handleEditTask}
-              onTaskDelete={deleteTask}
-              onAddTask={handleAddTask}
-            />
+             <KanbanBoard
+               tasks={filteredTasks}
+               onTaskUpdate={updateTask}
+               onTaskEdit={handleEditTask}
+               onTaskDelete={handleDeleteTask}
+               onAddTask={handleAddTask}
+             />
           </TabsContent>
 
           <TabsContent value="notes" className="h-[calc(100vh-16rem)]">
@@ -253,11 +268,19 @@ export const TaskApp = () => {
         task={editingTask}
       />
 
-      {/* Pomodoro Modal */}
-      <PomodoroModal
-        open={showPomodoroModal}
-        onOpenChange={setShowPomodoroModal}
-      />
+       {/* Pomodoro Modal */}
+       <PomodoroModal
+         open={showPomodoroModal}
+         onOpenChange={setShowPomodoroModal}
+       />
+
+       {/* Delete Task Modal */}
+       <DeleteTaskModal
+         open={showDeleteModal}
+         onOpenChange={setShowDeleteModal}
+         onConfirm={confirmDeleteTask}
+         task={taskToDelete}
+       />
 
       {/* Footer */}
       <footer className="border-t bg-muted/30 py-6 mt-12">

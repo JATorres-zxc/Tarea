@@ -42,7 +42,7 @@ export const TaskForm = ({ open, onOpenChange, onSubmit, task }: TaskFormProps) 
       setTags([...task.tags]);
       setDueDate(task.dueDate);
       setIsRecurring(!!task.recurring);
-      setRecurringInterval(task.recurring?.interval || 'weekly');
+      setRecurringInterval((task.recurring?.interval as typeof recurringInterval) || 'weekly');
     } else if (open) {
       // Reset to defaults when creating new task
       setTitle('');

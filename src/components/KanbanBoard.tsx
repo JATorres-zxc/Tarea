@@ -11,7 +11,7 @@ interface KanbanBoardProps {
   tasks: Task[];
   onTaskUpdate: (id: string, updates: Partial<Task>) => void;
   onTaskEdit: (task: Task) => void;
-  onTaskDelete: (id: string) => void;
+  onTaskDelete: (task: Task) => void;
   onAddTask: (status: Status) => void;
 }
 
@@ -109,16 +109,16 @@ export const KanbanBoard = ({
                               snapshot.isDragging && "rotate-3 scale-105"
                             )}
                           >
-                            <TaskCard
-                              task={task}
-                              onEdit={onTaskEdit}
-                              onDelete={onTaskDelete}
-                              onStatusChange={(id, newStatus) => onTaskUpdate(id, { status: newStatus })}
-                              className={cn(
-                                "cursor-grab active:cursor-grabbing",
-                                snapshot.isDragging && "shadow-lg"
-                              )}
-                            />
+                             <TaskCard
+                               task={task}
+                               onEdit={onTaskEdit}
+                               onDelete={() => onTaskDelete(task)}
+                               onStatusChange={(id, newStatus) => onTaskUpdate(id, { status: newStatus })}
+                               className={cn(
+                                 "cursor-grab active:cursor-grabbing",
+                                 snapshot.isDragging && "shadow-lg"
+                               )}
+                             />
                           </div>
                         )}
                       </Draggable>

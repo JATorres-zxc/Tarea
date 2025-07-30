@@ -8,7 +8,7 @@ import { Task, Priority } from '@/types/task';
 interface TaskCardProps {
   task: Task;
   onEdit: (task: Task) => void;
-  onDelete: (id: string) => void;
+  onDelete: () => void;
   onStatusChange: (id: string, status: Task['status']) => void;
   className?: string;
 }
@@ -66,7 +66,7 @@ export const TaskCard = ({ task, onEdit, onDelete, onStatusChange, className }: 
               variant="ghost" 
               size="sm"
               className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-              onClick={() => onDelete(task.id)}
+              onClick={onDelete}
             >
               <Trash2 className="h-3 w-3" />
             </Button>
