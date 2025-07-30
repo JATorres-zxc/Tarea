@@ -11,6 +11,7 @@ import { KanbanBoard } from './KanbanBoard';
 import { PomodoroModal } from './PomodoroModal';
 import { NotesSection } from './NotesSection';
 import { DeleteTaskModal } from './DeleteTaskModal';
+import { UpdateTaskModal } from './UpdateTaskModal';
 import { useTasks } from '@/hooks/useTasks';
 import { useAuth } from '@/hooks/useAuth';
 import { Task, Filter, Status } from '@/types/task';
@@ -32,14 +33,19 @@ export const TaskApp = () => {
   const [showPomodoroModal, setShowPomodoroModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [pendingUpdate, setPendingUpdate] = useState<{ task: Task; updates: Partial<Task> } | null>(null);
 
   const filteredTasks = filterTasks(tasks, filter);
   const availableTags = getAllTags();
 
   const handleTaskSubmit = (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'comments'>) => {
     if (editingTask) {
-      updateTask(editingTask.id, taskData);
+      // Show confirmation modal for updates
+      setPendingUpdate({ task: editingTask, updates: taskData });
+      setShowUpdateModal(true);
     } else {
+      // Direct add for new tasks
       addTask(taskData);
     }
     setEditingTask(null);
@@ -65,6 +71,13 @@ export const TaskApp = () => {
     if (taskToDelete) {
       deleteTask(taskToDelete.id);
       setTaskToDelete(null);
+    }
+  };
+
+  const confirmUpdateTask = () => {
+    if (pendingUpdate) {
+      updateTask(pendingUpdate.task.id, pendingUpdate.updates);
+      setPendingUpdate(null);
     }
   };
 
@@ -280,6 +293,14 @@ export const TaskApp = () => {
          onOpenChange={setShowDeleteModal}
          onConfirm={confirmDeleteTask}
          task={taskToDelete}
+       />
+
+       {/* Update Task Modal */}
+       <UpdateTaskModal
+         open={showUpdateModal}
+         onOpenChange={setShowUpdateModal}
+         onConfirm={confirmUpdateTask}
+         task={pendingUpdate?.task || null}
        />
 
       {/* Footer */}
