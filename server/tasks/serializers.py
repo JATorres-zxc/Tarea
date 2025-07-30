@@ -16,26 +16,23 @@ class CommentSerializer(serializers.ModelSerializer):
 class TaskSerializer(serializers.ModelSerializer):
     comments = CommentSerializer(many=True, read_only=True)
     user = serializers.PrimaryKeyRelatedField(read_only=True)
-    dueDate = serializers.DateTimeField(source='due_date', required=False, allow_null=True)
+    due_date = serializers.DateTimeField(required=False, allow_null=True)
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)
     updatedAt = serializers.DateTimeField(source='updated_at', read_only=True)
-    
+
     class Meta:
         model = Task
         fields = [
             'id', 'title', 'description', 'status', 'priority', 
-            'dueDate', 'tags', 'createdAt', 'updatedAt', 
-            'user', 'comments'  # Removed pomodoroCount
+            'due_date', 'tags', 'createdAt', 'updatedAt', 
+            'user', 'comments'
         ]
         read_only_fields = ['id', 'createdAt', 'updatedAt', 'user']
 
     def create(self, validated_data):
-        if 'dueDate' in validated_data:
-            validated_data['due_date'] = validated_data.pop('dueDate')
+        print("validated_data in create:", validated_data)
         validated_data['user'] = self.context['request'].user
         return super().create(validated_data)
-    
+
     def update(self, instance, validated_data):
-        if 'dueDate' in validated_data:
-            validated_data['due_date'] = validated_data.pop('dueDate')
         return super().update(instance, validated_data)

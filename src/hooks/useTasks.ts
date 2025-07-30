@@ -47,10 +47,10 @@ export const useTasks = () => {
       description: task.description,
       status: task.status,
       priority: task.priority,
-      dueDate: task.due_date ? new Date(task.due_date) : undefined,
+      dueDate: task.due_date ? new Date(task.due_date) : undefined, // <-- map snake_case to camelCase
       tags: task.tags || [],
-      createdAt: new Date(task.created_at),
-      updatedAt: new Date(task.updated_at),
+      createdAt: new Date(task.createdAt || task.created_at), // handle both just in case
+      updatedAt: new Date(task.updatedAt || task.updated_at),
       comments: task.comments?.map(transformComment) || [],
       pomodoroCount: task.pomodoro_count || 0,
       recurring: task.recurring ? {

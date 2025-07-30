@@ -135,12 +135,12 @@ export const TaskCard = ({ task, onEdit, onDelete, onStatusChange, className }: 
               </div>
             )}
             
-            {task.pomodoroCount && task.pomodoroCount > 0 && (
+            {/* {task.pomodoroCount && task.pomodoroCount > 0 && (
               <div className="flex items-center gap-1">
                 <Timer className="h-3 w-3" />
                 <span>{task.pomodoroCount}</span>
               </div>
-            )}
+            )} */}
           </div>
           
           <div className="flex items-center gap-1">
