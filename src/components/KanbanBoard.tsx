@@ -35,7 +35,6 @@ export const KanbanBoard = ({
     return tasks
       .filter(task => task.status === status)
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-      .slice(0, 3); // Show only latest 3 tasks
   };
 
   const handleDragEnd = (result: DropResult) => {
@@ -101,7 +100,7 @@ export const KanbanBoard = ({
                         : "border-transparent"
                     )}
                   >
-                    <ScrollArea className="h-[400px]">
+                    <ScrollArea className="h-[500px]">
                       <div className="space-y-3 p-2">
                         {statusTasks.map((task, index) => (
                           <Draggable key={task.id} draggableId={task.id} index={index}>
