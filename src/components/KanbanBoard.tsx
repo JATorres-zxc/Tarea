@@ -3,6 +3,7 @@ import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { TaskCard } from './TaskCard';
 import { Task, Status } from '@/types/task';
 import { cn } from '@/lib/utils';
@@ -31,7 +32,10 @@ export const KanbanBoard = ({
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
 
   const getTasksByStatus = (status: Status) => {
-    return tasks.filter(task => task.status === status);
+    return tasks
+      .filter(task => task.status === status)
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .slice(0, 3); // Show only latest 3 tasks
   };
 
   const handleDragEnd = (result: DropResult) => {
@@ -91,51 +95,55 @@ export const KanbanBoard = ({
                     ref={provided.innerRef}
                     {...provided.droppableProps}
                     className={cn(
-                      "flex-1 space-y-3 p-2 rounded-lg border-2 border-dashed transition-colors min-h-[200px]",
+                      "flex-1 rounded-lg border-2 border-dashed transition-colors",
                       snapshot.isDraggingOver
                         ? "border-primary bg-primary/5"
                         : "border-transparent"
                     )}
                   >
-                    {statusTasks.map((task, index) => (
-                      <Draggable key={task.id} draggableId={task.id} index={index}>
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            className={cn(
-                              "transition-transform",
-                              snapshot.isDragging && "rotate-3 scale-105"
+                    <ScrollArea className="h-[400px]">
+                      <div className="space-y-3 p-2">
+                        {statusTasks.map((task, index) => (
+                          <Draggable key={task.id} draggableId={task.id} index={index}>
+                            {(provided, snapshot) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                className={cn(
+                                  "transition-transform",
+                                  snapshot.isDragging && "rotate-3 scale-105"
+                                )}
+                              >
+                                 <TaskCard
+                                   task={task}
+                                   onEdit={onTaskEdit}
+                                   onDelete={() => onTaskDelete(task)}
+                                   onStatusChange={(id, newStatus) => onTaskUpdate(id, { status: newStatus })}
+                                   className={cn(
+                                     "cursor-grab active:cursor-grabbing",
+                                     snapshot.isDragging && "shadow-lg"
+                                   )}
+                                 />
+                              </div>
                             )}
-                          >
-                             <TaskCard
-                               task={task}
-                               onEdit={onTaskEdit}
-                               onDelete={() => onTaskDelete(task)}
-                               onStatusChange={(id, newStatus) => onTaskUpdate(id, { status: newStatus })}
-                               className={cn(
-                                 "cursor-grab active:cursor-grabbing",
-                                 snapshot.isDragging && "shadow-lg"
-                               )}
-                             />
-                          </div>
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                        
+                        {/* Empty State */}
+                        {statusTasks.length === 0 && (
+                          <Card className="p-8 text-center border-dashed">
+                            <p className="text-sm text-muted-foreground">
+                              {draggedTask && draggedTask.status !== status 
+                                ? `Drop task here to move to ${config.title.toLowerCase()}`
+                                : `No tasks in ${config.title.toLowerCase()}`
+                              }
+                            </p>
+                          </Card>
                         )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                    
-                    {/* Empty State */}
-                    {statusTasks.length === 0 && (
-                      <Card className="p-8 text-center border-dashed">
-                        <p className="text-sm text-muted-foreground">
-                          {draggedTask && draggedTask.status !== status 
-                            ? `Drop task here to move to ${config.title.toLowerCase()}`
-                            : `No tasks in ${config.title.toLowerCase()}`
-                          }
-                        </p>
-                      </Card>
-                    )}
+                      </div>
+                    </ScrollArea>
                   </div>
                 )}
               </Droppable>
