@@ -4,6 +4,7 @@ from .models import Task, Comment
 from .serializers import TaskSerializer, CommentSerializer
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import action
+from django.db import models
 
 class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
