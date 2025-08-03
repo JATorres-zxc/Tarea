@@ -16,6 +16,7 @@ interface ApiTask {
   updated_at: string;
   comments?: ApiComment[];
   pomodoro_count?: number;
+  position?: number; 
   recurring?: {
     interval: string;
     last_created: string;
@@ -53,11 +54,26 @@ export const useTasks = () => {
       updatedAt: new Date(task.updated_at),
       comments: task.comments?.map(transformComment) || [],
       pomodoroCount: task.pomodoro_count || 0,
+      position: task.position || 0,
       recurring: task.recurring ? {
         interval: task.recurring.interval,
         lastCreated: new Date(task.recurring.last_created)
       } : undefined
     };
+  };
+
+  const reorderTasks = async (status: Status, newOrder: string[]) => {
+    try {
+      await axios.post('/api/tasks/reorder/', {
+        status,
+        order: newOrder
+      });
+      await fetchTasks();  // Refresh the task list
+    } catch (err) {
+      setError('Failed to reorder tasks');
+      console.error('Error reordering tasks:', err);
+      throw err;
+    }
   };
 
   // Helper function to transform API comment to Comment type
@@ -262,6 +278,7 @@ export const useTasks = () => {
     addComment,
     filterTasks,
     getAllTags,
-    refreshTasks: fetchTasks
+    refreshTasks: fetchTasks,
+    reorderTasks
   };
 };

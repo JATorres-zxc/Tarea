@@ -33,6 +33,7 @@ class Task(models.Model):
     tags = models.JSONField(_('tags'), default=list, blank=True)
     created_at = models.DateTimeField(_('created at'), auto_now_add=True)
     updated_at = models.DateTimeField(_('updated at'), auto_now=True)
+    position = models.PositiveIntegerField(_('position'), default=0)
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -44,7 +45,7 @@ class Task(models.Model):
         return f"{self.title} ({self.get_status_display()})"
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ['status', 'position']
         verbose_name = _('task')
         verbose_name_plural = _('tasks')
 

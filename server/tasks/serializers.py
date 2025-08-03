@@ -19,13 +19,14 @@ class TaskSerializer(serializers.ModelSerializer):
     due_date = serializers.DateTimeField(required=False, allow_null=True)
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)
     updatedAt = serializers.DateTimeField(source='updated_at', read_only=True)
+    position = serializers.IntegerField(required=False)
 
     class Meta:
         model = Task
         fields = [
             'id', 'title', 'description', 'status', 'priority', 
             'due_date', 'tags', 'createdAt', 'updatedAt', 
-            'user', 'comments'
+            'user', 'comments', 'position'
         ]
         read_only_fields = ['id', 'createdAt', 'updatedAt', 'user']
 

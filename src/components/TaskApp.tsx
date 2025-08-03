@@ -17,7 +17,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Task, Filter, Status } from '@/types/task';
 
 export const TaskApp = () => {
-  const { tasks, loading, addTask, updateTask, deleteTask, addComment, filterTasks, getAllTags } = useTasks();
+  const { tasks, loading, addTask, updateTask, deleteTask, addComment, filterTasks, getAllTags, reorderTasks } = useTasks();
   const { user, logout } = useAuth();
   const [filter, setFilter] = useState<Filter>({
     search: '',
@@ -247,6 +247,7 @@ export const TaskApp = () => {
                onTaskEdit={handleEditTask}
                onTaskDelete={handleDeleteTask}
                onAddTask={handleAddTask}
+               reorderTasks={reorderTasks}
              />
           </TabsContent>
 

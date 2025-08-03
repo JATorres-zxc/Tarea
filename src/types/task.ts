@@ -13,6 +13,7 @@ export interface Task {
   updatedAt: Date;
   comments: Comment[];
   pomodoroCount?: number;
+  position?: number; 
   recurring?: {
     interval: string;
     lastCreated: Date;

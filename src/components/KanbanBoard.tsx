@@ -27,27 +27,42 @@ export const KanbanBoard = ({
   onTaskUpdate, 
   onTaskEdit, 
   onTaskDelete, 
-  onAddTask 
-}: KanbanBoardProps) => {
+  onAddTask,
+  reorderTasks 
+}: KanbanBoardProps & { reorderTasks: (status: Status, newOrder: string[]) => Promise<void> }) => {
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
 
   const getTasksByStatus = (status: Status) => {
     return tasks
       .filter(task => task.status === status)
-      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .sort((a, b) => (a.position || 0) - (b.position || 0));  // Sort by position
   };
 
-  const handleDragEnd = (result: DropResult) => {
+  const handleDragEnd = async (result: DropResult) => {
     setDraggedTask(null);
     
     if (!result.destination) return;
 
     const { source, destination, draggableId } = result;
     
-    if (source.droppableId === destination.droppableId) return;
-
-    const newStatus = destination.droppableId as Status;
-    onTaskUpdate(draggableId, { status: newStatus });
+    // Reordering within the same column
+    if (source.droppableId === destination.droppableId) {
+      const status = source.droppableId as Status;
+      const statusTasks = getTasksByStatus(status);
+      
+      // Create new order array
+      const newOrder = Array.from(statusTasks.map(t => t.id));
+      const [removed] = newOrder.splice(source.index, 1);
+      newOrder.splice(destination.index, 0, removed);
+      
+      // Update backend
+      await reorderTasks(status, newOrder);
+    } 
+    // Moving between columns
+    else {
+      const newStatus = destination.droppableId as Status;
+      await onTaskUpdate(draggableId, { status: newStatus });
+    }
   };
 
   const handleDragStart = (start: any) => {
